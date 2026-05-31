@@ -154,7 +154,7 @@
                         app:iconPadding="8dp"
                         android:insetTop="0dp"
                         android:insetBottom="0dp"
-                        app:icon="@android:drawable/ic_menu_mylocation" />
+                        app:icon="@drawable/my_location_24px" />
 
                     <!-- New Map Button -->
                     <com.google.android.material.button.MaterialButton
@@ -171,7 +171,7 @@
                         app:iconPadding="8dp"
                         android:insetTop="0dp"
                         android:insetBottom="0dp"
-                        app:icon="@android:drawable/ic_dialog_map" />
+                        app:icon="@drawable/map_search_24px" />
                 </LinearLayout>
 
                 <TextView
