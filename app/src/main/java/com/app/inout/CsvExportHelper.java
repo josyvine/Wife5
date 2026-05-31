@@ -78,21 +78,26 @@ public class CsvExportHelper {
                 }
             }
 
+            // SANITIZE: Remove raw system line breaks inside fields to prevent CSV row-splitting corruption
+            String sanitizedTransit = transit.replace("\r", "").replace("\n", " ");
+            String sanitizedLocation = location.replace("\r", "").replace("\n", " ");
+            String sanitizedRemarks = remarks.replace("\r", "").replace("\n", " ");
+
             // Append row to string (Wrap multi-word strings in quotes to handle commas)
             csvData.append(date).append(",")
                     .append(day).append(",")
                     .append(inTime).append(",")
-                    .append("\"").append(transit).append("\",")
+                    .append("\"").append(sanitizedTransit).append("\",")
                     .append(outTime).append(",")
                     .append(shiftInfo).append(",")
                     .append(hours).append(",")
                     .append(overtime).append(",")
-                    .append("\"").append(location).append("\",")
+                    .append("\"").append(sanitizedLocation).append("\",")
                     .append(distance).append(",")
                     .append(finger).append(",")
                     .append(gps).append(",")
                     .append(status).append(",")
-                    .append("\"").append(remarks).append("\"\n");
+                    .append("\"").append(sanitizedRemarks).append("\"\n");
         }
 
         // 3. Save and Share logic
