@@ -24,6 +24,7 @@ import androidx.core.content.FileProvider;
 import com.bumptech.glide.Glide;
 import com.inout.app.models.AttendanceRecord;
 import com.inout.app.models.User;
+import com.inout.app.utils.EncryptionHelper;
 import com.inout.app.utils.TimeUtils;
 
 import java.io.File;
@@ -113,7 +114,7 @@ public class PdfExportHelper {
         Canvas canvas = page.getCanvas();
 
         // 3. Draw CV Header (Only rendered on the first page)
-        drawCvHeader(canvas, employee, profileBitmap, paint, textPaint);
+        drawCvHeader(context, canvas, employee, profileBitmap, paint, textPaint);
 
         // Vertical tracker starts below the CV Header layout
         int currentY = 180;
@@ -237,7 +238,7 @@ public class PdfExportHelper {
         }
     }
 
-    private static void drawCvHeader(Canvas canvas, User employee, Bitmap profileBitmap, Paint paint, TextPaint textPaint) {
+    private static void drawCvHeader(Context context, Canvas canvas, User employee, Bitmap profileBitmap, Paint paint, TextPaint textPaint) {
         // Draw Light Gray Card Background
         paint.setColor(Color.parseColor("#F5F5F5"));
         canvas.drawRect(MARGIN_LEFT, MARGIN_TOP, PAGE_WIDTH - MARGIN_RIGHT, 150, paint);
@@ -281,7 +282,7 @@ public class PdfExportHelper {
         textPaint.setColor(Color.parseColor("#00796B"));
         textPaint.setTextSize(11f);
         textPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
-        canvas.drawText(EncryptionHelper.getInstance(canvas.getWidth() > 0 ? null : null).getCompanyName(), textStartX, MARGIN_TOP + 80, textPaint);
+        canvas.drawText(EncryptionHelper.getInstance(context).getCompanyName(), textStartX, MARGIN_TOP + 80, textPaint);
 
         // Report Month Box [2]
         paint.setColor(Color.parseColor("#E0F2F1"));
