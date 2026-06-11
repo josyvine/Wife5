@@ -84,6 +84,20 @@ public class VoiceAssistantBottomSheet extends BottomSheetDialogFragment {
         // Load conversation logs from database
         loadConversationLogs();
 
+        // Sync UI state dynamically with the persistent background service status [1]
+        if (getActivity() instanceof MainActivity) {
+            MainActivity mainActivity = (MainActivity) getActivity();
+            if (mainActivity.isLiveSessionActive()) {
+                mIsRecordingLive = true;
+                mStatusText.setText("Connected to Gemini Live Model");
+                mMicBtn.setImageResource(android.R.drawable.ic_media_pause);
+                mMicBtn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#EF4444"))); // Red
+                mMicLabel.setText("TAP TO PAUSE");
+            } else {
+                resetMicButton();
+            }
+        }
+
         // Bind Microphone button action
         mMicBtn.setOnClickListener(v -> handleMicButtonClick());
 
@@ -178,13 +192,8 @@ public class VoiceAssistantBottomSheet extends BottomSheetDialogFragment {
     @Override
     public void onPause() {
         super.onPause();
-        if (mIsRecordingLive && getActivity() instanceof MainActivity) {
-            MainActivity mainActivity = (MainActivity) getActivity();
-            if (mainActivity.getLiveAgentWebView() != null) {
-                mainActivity.getLiveAgentWebView().evaluateJavascript("if (window.disconnectWebSocketLive) { window.disconnectWebSocketLive(); }", null);
-            }
-        }
-        resetMicButton();
+        // REMOVED evaluateJavascript(window.disconnectWebSocketLive) to allow foreground mic persistence [1]
+        // Handled manually via explicit button clicks to allow persistent background capture.
     }
 
     @Override
