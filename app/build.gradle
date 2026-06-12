@@ -83,10 +83,10 @@ dependencies {
   implementation(platform(libs.firebase.bom))
   // implementation(libs.accompanist.permissions)
   // implementation(libs.androidx.activity.compose)
-  // implementation(libs.androidx.camera.camera2)
-  // implementation(libs.androidx.camera.core)
-  // implementation(libs.androidx.camera.lifecycle)
-  // implementation(libs.androidx.camera.view)
+  implementation(libs.androidx.camera.camera2)
+  implementation(libs.androidx.camera.core)
+  implementation(libs.androidx.camera.lifecycle)
+  implementation(libs.androidx.camera.view)
   implementation(libs.androidx.compose.material.icons.core)
   // implementation(libs.androidx.compose.material.icons.extended)
   implementation(libs.androidx.compose.material3)
@@ -113,7 +113,7 @@ dependencies {
   implementation(libs.retrofit)
   implementation(libs.gson)
   implementation(libs.converter.gson)
-  
+
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)
   testImplementation(libs.androidx.junit)
@@ -123,20 +123,20 @@ dependencies {
   testImplementation(libs.roborazzi)
   testImplementation(libs.roborazzi.compose)
   testImplementation(libs.roborazzi.junit.rule)
-  
+
   androidTestImplementation(platform(libs.androidx.compose.bom))
   androidTestImplementation(libs.androidx.compose.ui.test.junit4)
   androidTestImplementation(libs.androidx.espresso.core)
   androidTestImplementation(libs.androidx.junit)
   androidTestImplementation(libs.androidx.runner)
-  
+
   debugImplementation(libs.androidx.compose.ui.test.manifest)
   debugImplementation(libs.androidx.compose.ui.tooling)
-  
+
   // Replaced legacy annotation processor with KSP dynamic methods from Reference Gradle
   "ksp"(libs.androidx.room.compiler)
   "ksp"(libs.moshi.kotlin.codegen)
-  
+
   implementation(libs.androidx.webkit)
   implementation(libs.androidx.swiperefreshlayout)
   implementation(libs.material)
@@ -151,19 +151,19 @@ tasks.register("copyApkToBuildOutputs") {
         def rootDestFile1 = file("${rootDir}/app-debug.apk")
         def rootDestFile2 = file("${rootDir}/WifeConsole.apk")
         def zipDestFile = file("${rootDir}/WifeConsole.zip")
-        
+
         if (srcFile.exists()) {
             destFile.parentFile.mkdirs()
-            
+
             // Platform-independent and clean copy utilizing Java NIO
             Files.copy(srcFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
             Files.copy(srcFile.toPath(), rootDestFile1.toPath(), StandardCopyOption.REPLACE_EXISTING)
             Files.copy(srcFile.toPath(), rootDestFile2.toPath(), StandardCopyOption.REPLACE_EXISTING)
-            
+
             println("APK successfully copied to build outputs: $destFile (${destFile.length()} bytes)")
             println("APK successfully copied to root: $rootDestFile1 (${rootDestFile1.length()} bytes)")
             println("APK successfully copied to root: $rootDestFile2 (${rootDestFile2.length()} bytes)")
-            
+
             // Re-package the authentic APK into a ZIP called WifeConsole.zip using stream objects
             def fos = new FileOutputStream(zipDestFile)
             def zos = new ZipOutputStream(fos)
