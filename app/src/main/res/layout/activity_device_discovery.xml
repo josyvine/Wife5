@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/editorial_background">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbarDiscovery"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/editorial_background"
+        app:title="Scan Nearby Devices"
+        app:titleTextColor="@color/editorial_primary_dark"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ProgressBar
+        android:id="@+id/pbDiscoveryProgress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/toolbarDiscovery" />
+
+    <TextView
+        android:id="@+id/tvDiscoveryHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:text="Turn on WiFi on both devices and launch scanning. Select a device below to request a secure link request."
+        android:textSize="13sp"
+        android:textColor="@color/editorial_text_secondary"
+        app:layout_constraintTop_toBottomOf="@id/pbDiscoveryProgress" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvDiscoveredDevices"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/tvDiscoveryHint"
+        app:layout_constraintBottom_toTopOf="@id/btnStartDiscovery" />
+
+    <Button
+        android:id="@+id/btnStartDiscovery"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_margin="16dp"
+        android:backgroundTint="@color/editorial_accent"
+        android:text="Initiate Mesh Scan"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,523 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/drawerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+    <!-- Screen Content Wrapper -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/editorial_background">
+
+        <!-- Top AppBar Toolbar -->
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbarMain"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/editorial_background"
+            app:title="Wife"
+            app:titleTextColor="@color/editorial_primary_dark"
+            app:navigationIcon="@drawable/ic_menu_hamburger"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Connection Status Overview Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardConnectionOverview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/editorial_border"
+            app:strokeWidth="1dp"
+            app:cardBackgroundColor="@color/editorial_surface"
+            app:layout_constraintTop_toBottomOf="@id/toolbarMain">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Connection Profile"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="@color/editorial_primary_dark" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/editorial_border"
+                    android:layout_marginVertical="12dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <View
+                        android:id="@+id/vStatusIndicator"
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:background="@android:drawable/presence_offline"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvMainConnectionState"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Disconnected"
+                        android:textStyle="bold"
+                        android:textColor="#E05B5B"
+                        android:textSize="14sp" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvMainPeerDetails"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="No connected devices nearby."
+                    android:textSize="12sp"
+                    android:textColor="@color/editorial_text_secondary" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Elegant Central Visual Console Helper -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardCentralHelper"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_margin="16dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/editorial_border"
+            app:strokeWidth="1dp"
+            app:cardBackgroundColor="@color/editorial_surface"
+            app:layout_constraintTop_toBottomOf="@id/cardConnectionOverview"
+            app:layout_constraintBottom_toTopOf="@id/footerContainer">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="24dp">
+
+                <ImageView
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:src="@drawable/ic_mesh_logs"
+                    app:tint="@color/editorial_accent"
+                    android:layout_marginBottom="16dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Local Offline Loop"
+                    android:textStyle="bold"
+                    android:textSize="18sp"
+                    android:textColor="@color/editorial_primary_dark"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="This offline mesh network links dynamic peer devices using WiFi-Direct without cellular data or internet limits.\n\nSwipe open the slider drawer from left to reveal system logs, details, and properties, or tap the sliding horizontal menu below to connect."
+                    android:textSize="13sp"
+                    android:textColor="@color/editorial_text_secondary"
+                    android:gravity="center"
+                    android:lineSpacingMultiplier="1.2" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Horizontal Scrollable Footer Menu Container -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/footerContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="3dp"
+            app:strokeColor="@color/editorial_border"
+            app:strokeWidth="1dp"
+            app:cardBackgroundColor="@color/editorial_surface"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginBottom="10dp"
+                    android:text="P2P SERVICES (Swipe Left &amp; Right)"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/editorial_text_secondary"
+                    android:letterSpacing="0.1" />
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none"
+                    android:overScrollMode="never">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="4dp">
+
+                        <!-- Scan Nearby Card -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/btnDiscovery"
+                            android:layout_width="110dp"
+                            android:layout_height="110dp"
+                            android:layout_margin="6dp"
+                            app:cardCornerRadius="20dp"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="1dp"
+                            app:strokeColor="@color/editorial_border"
+                            app:cardBackgroundColor="@color/editorial_background"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?android:attr/selectableItemBackground">
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:orientation="vertical"
+                                android:gravity="center"
+                                android:padding="8dp">
+                                <ImageView
+                                    android:layout_width="28dp"
+                                    android:layout_height="28dp"
+                                    android:src="@drawable/ic_scan_nearby"
+                                    app:tint="@color/editorial_accent" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:text="Scan Nearby"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/editorial_primary_dark"
+                                    android:textStyle="bold"
+                                    android:gravity="center" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <!-- Secure Chat Card -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/btnTextChat"
+                            android:layout_width="110dp"
+                            android:layout_height="110dp"
+                            android:layout_margin="6dp"
+                            app:cardCornerRadius="20dp"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="1dp"
+                            app:strokeColor="@color/editorial_border"
+                            app:cardBackgroundColor="@color/editorial_background"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?android:attr/selectableItemBackground">
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:orientation="vertical"
+                                android:gravity="center"
+                                android:padding="8dp">
+                                <ImageView
+                                    android:layout_width="28dp"
+                                    android:layout_height="28dp"
+                                    android:src="@drawable/ic_secure_chat"
+                                    app:tint="@color/editorial_accent" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:text="Secure Chat"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/editorial_primary_dark"
+                                    android:textStyle="bold"
+                                    android:gravity="center" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <!-- Voice Session Call Card -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/btnDirectCall"
+                            android:layout_width="110dp"
+                            android:layout_height="110dp"
+                            android:layout_margin="6dp"
+                            app:cardCornerRadius="20dp"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="1dp"
+                            app:strokeColor="@color/editorial_border"
+                            app:cardBackgroundColor="@color/editorial_background"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?android:attr/selectableItemBackground">
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:orientation="vertical"
+                                android:gravity="center"
+                                android:padding="8dp">
+                                <ImageView
+                                    android:layout_width="28dp"
+                                    android:layout_height="28dp"
+                                    android:src="@drawable/ic_voice_call"
+                                    app:tint="@color/editorial_accent" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:text="Voice Session"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/editorial_primary_dark"
+                                    android:textStyle="bold"
+                                    android:gravity="center" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <!-- Video Session Call Card (Fixed / Restored) -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/btnVideoCall"
+                            android:layout_width="110dp"
+                            android:layout_height="110dp"
+                            android:layout_margin="6dp"
+                            app:cardCornerRadius="20dp"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="1dp"
+                            app:strokeColor="@color/editorial_border"
+                            app:cardBackgroundColor="@color/editorial_background"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?android:attr/selectableItemBackground">
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:orientation="vertical"
+                                android:gravity="center"
+                                android:padding="8dp">
+                                <ImageView
+                                    android:layout_width="28dp"
+                                    android:layout_height="28dp"
+                                    android:src="@drawable/ic_video_call"
+                                    app:tint="@color/editorial_accent" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:text="Video Session"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/editorial_primary_dark"
+                                    android:textStyle="bold"
+                                    android:gravity="center" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <!-- Transfer Files Card -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/btnFileShare"
+                            android:layout_width="110dp"
+                            android:layout_height="110dp"
+                            android:layout_margin="6dp"
+                            app:cardCornerRadius="20dp"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="1dp"
+                            app:strokeColor="@color/editorial_border"
+                            app:cardBackgroundColor="@color/editorial_background"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?android:attr/selectableItemBackground">
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:orientation="vertical"
+                                android:gravity="center"
+                                android:padding="8dp">
+                                <ImageView
+                                    android:layout_width="28dp"
+                                    android:layout_height="28dp"
+                                    android:src="@drawable/ic_transfer_files"
+                                    app:tint="@color/editorial_accent" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:text="Transfer Files"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/editorial_primary_dark"
+                                    android:textStyle="bold"
+                                    android:gravity="center" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                    </LinearLayout>
+                </HorizontalScrollView>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Side Slide Out Slider Drawer Menu View -->
+    <LinearLayout
+        android:id="@+id/sliderDrawer"
+        android:layout_width="280dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:orientation="vertical"
+        android:background="@color/editorial_surface"
+        android:clickable="true"
+        android:focusable="true"
+        android:fitsSystemWindows="true"
+        android:padding="24dp">
+
+        <!-- Drawer Header -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Wife Console"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/editorial_primary_dark"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="P2P Mesh Network Manager"
+            android:textSize="12sp"
+            android:textColor="@color/editorial_text_secondary"
+            android:layout_marginBottom="24dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/editorial_border"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Drawer Item: Mesh Logs -->
+        <LinearLayout
+            android:id="@+id/btnMenuMeshLogs"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginBottom="12dp"
+            android:paddingHorizontal="8dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_mesh_logs"
+                app:tint="@color/editorial_accent"
+                android:layout_marginEnd="16dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mesh Network Logs"
+                android:textSize="14sp"
+                android:textColor="@color/editorial_primary_dark"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Drawer Item: Call Logs -->
+        <LinearLayout
+            android:id="@+id/btnMenuCallHistory"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginBottom="12dp"
+            android:paddingHorizontal="8dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_history_logs"
+                app:tint="@color/editorial_accent"
+                android:layout_marginEnd="16dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Call History Records"
+                android:textSize="14sp"
+                android:textColor="@color/editorial_primary_dark"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Drawer Item: Settings -->
+        <LinearLayout
+            android:id="@+id/btnMenuSettings"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginBottom="12dp"
+            android:paddingHorizontal="8dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_settings_cog"
+                app:tint="@color/editorial_accent"
+                android:layout_marginEnd="16dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="App Settings"
+                android:textSize="14sp"
+                android:textColor="@color/editorial_primary_dark"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!-- App Footer Info in Drawer -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Wife Link Hub v2.0"
+            android:textSize="11sp"
+            android:textColor="@color/editorial_text_secondary"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="12dp" />
+
+    </LinearLayout>
+
+</androidx.drawerlayout.widget.DrawerLayout>

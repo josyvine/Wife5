@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/editorial_background">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbarConnectionStatus"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/editorial_background"
+        app:title="Mesh Connection Monitor"
+        app:titleTextColor="@color/editorial_primary_dark" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Topology Detail Cards -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/editorial_border"
+            app:strokeWidth="1dp"
+            app:cardBackgroundColor="@color/editorial_surface"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="P2P Mesh Topography"
+                    android:textStyle="bold"
+                    android:textSize="15sp"
+                    android:textColor="@color/editorial_primary_dark" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/editorial_border"
+                    android:layout_marginVertical="12dp" />
+
+                <TextView
+                    android:id="@+id/tvRole"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Role: Unknown"
+                    android:textSize="13sp"
+                    android:textColor="@color/editorial_text_secondary" />
+
+                <TextView
+                    android:id="@+id/tvRemoteIP"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Peer IP: -"
+                    android:textSize="13sp"
+                    android:textColor="@color/editorial_text_secondary" />
+
+                <TextView
+                    android:id="@+id/tvGroupActive"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Group Formed: No"
+                    android:textSize="13sp"
+                    android:textColor="@color/editorial_text_secondary" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Command controls -->
+        <Button
+            android:id="@+id/btnForceDisconnect"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:backgroundTint="#F44336"
+            android:text="Destroy Active Mesh Group"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+</LinearLayout>

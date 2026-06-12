@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <!-- Peer Stream (Full Screen View) -->
+    <ImageView
+        android:id="@+id/ivPeerVideo"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:contentDescription="Peer Stream Video" />
+
+    <!-- Self Mirror (Pip Overlay Card) -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardSelfMirror"
+        android:layout_width="100dp"
+        android:layout_height="140dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="24dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="8dp"
+        app:strokeColor="#FFFFFF"
+        app:strokeWidth="1dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+        
+        <ImageView
+            android:id="@+id/ivLocalVideo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:background="#222222"
+            android:contentDescription="Local Mirror Video" />
+            
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Caller Name Overlay Details -->
+    <TextView
+        android:id="@+id/tvVideoPeerName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="36dp"
+        android:text="Video Call Peer"
+        android:textColor="#FFFFFF"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/tvVideoCallState"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="4dp"
+        android:text="Negotiating..."
+        android:textColor="#DDDDDD"
+        android:textSize="14sp"
+        app:layout_constraintTop_toBottomOf="@id/tvVideoPeerName"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Overlaid Control Floating Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="24dp"
+        android:background="#33000000"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabSwitchCamera"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:src="@android:drawable/ic_menu_rotate"
+            app:backgroundTint="#AA121212"
+            app:tint="#FFFFFF"
+            android:contentDescription="Rotate Camera" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabAcceptVideo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:src="@android:drawable/btn_star_big_on"
+            app:backgroundTint="#4CAF50"
+            app:tint="#FFFFFF"
+            android:visibility="gone"
+            android:contentDescription="Accept Video Call" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabDeclineVideo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            app:backgroundTint="#F44336"
+            app:tint="#FFFFFF"
+            android:contentDescription="Decline Video Call" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
