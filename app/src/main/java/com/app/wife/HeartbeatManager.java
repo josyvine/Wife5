@@ -6,6 +6,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -16,6 +17,9 @@ public class HeartbeatManager {
     private final Context context;
     private final ScheduledExecutorService scheduler;
     private final Handler mainHandler;
+
+    private ScheduledFuture<?> sendTask;
+    private ScheduledFuture<?> checkTask;
 
     private long lastHeartbeatReceived = 0;
     private boolean isMonitoring = false;
@@ -43,16 +47,26 @@ public class HeartbeatManager {
         lastHeartbeatReceived = System.currentTimeMillis();
 
         // Send heartbeat packet every 5 seconds
-        scheduler.scheduleAtFixedRate(this::sendHeartbeat, 0, 5, TimeUnit.SECONDS);
+        sendTask = scheduler.scheduleAtFixedRate(this::sendHeartbeat, 0, 5, TimeUnit.SECONDS);
 
         // Check for heartbeat failures every 5 seconds
-        scheduler.scheduleAtFixedRate(this::checkHeartbeatStatus, 5, 5, TimeUnit.SECONDS);
+        checkTask = scheduler.scheduleAtFixedRate(this::checkHeartbeatStatus, 5, 5, TimeUnit.SECONDS);
         Log.d(TAG, "Heartbeat monitor launched.");
     }
 
     public synchronized void stopMonitoring() {
         isMonitoring = false;
-        scheduler.shutdown();
+
+        // Cancel the individual running tasks instead of shutting down the scheduler
+        if (sendTask != null) {
+            sendTask.cancel(true);
+            sendTask = null;
+        }
+        if (checkTask != null) {
+            checkTask.cancel(true);
+            checkTask = null;
+        }
+
         Log.d(TAG, "Heartbeat monitoring stopped.");
     }
 
