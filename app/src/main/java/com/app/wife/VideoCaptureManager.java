@@ -112,23 +112,57 @@ public class VideoCaptureManager {
     }
 
     private byte[] convertYuvToJpeg(ImageProxy image) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+
         ImageProxy.PlaneProxy[] planes = image.getPlanes();
         ByteBuffer yBuffer = planes[0].getBuffer();
         ByteBuffer uBuffer = planes[1].getBuffer();
         ByteBuffer vBuffer = planes[2].getBuffer();
 
-        int ySize = yBuffer.remaining();
-        int uSize = uBuffer.remaining();
-        int vSize = vBuffer.remaining();
+        yBuffer.rewind();
+        uBuffer.rewind();
+        vBuffer.rewind();
 
-        byte[] nv21 = new byte[ySize + uSize + vSize];
+        // NV21 requires exactly width * height for Y, and width * height / 2 for interleaved VU
+        byte[] nv21 = new byte[width * height + (width * height / 2)];
 
-        yBuffer.get(nv21, 0, ySize);
-        vBuffer.get(nv21, ySize, vSize);
-        uBuffer.get(nv21, ySize + vSize, uSize);
+        // Copy Y plane respecting row strides and pixel strides
+        int yRowStride = planes[0].getRowStride();
+        int yPixelStride = planes[0].getPixelStride();
+        int pos = 0;
 
-        int width = image.getWidth();
-        int height = image.getHeight();
+        for (int row = 0; row < height; row++) {
+            yBuffer.position(row * yRowStride);
+            for (int col = 0; col < width; col++) {
+                nv21[pos++] = yBuffer.get();
+                if (yPixelStride > 1 && col < width - 1) {
+                    yBuffer.position(yBuffer.position() + yPixelStride - 1);
+                }
+            }
+        }
+
+        // Interleave V and U plane parameters (NV21 chroma expects V, then U)
+        int uRowStride = planes[1].getRowStride();
+        int uPixelStride = planes[1].getPixelStride();
+        int vRowStride = planes[2].getRowStride();
+        int vPixelStride = planes[2].getPixelStride();
+
+        int chromaHeight = height / 2;
+        int chromaWidth = width / 2;
+
+        for (int row = 0; row < chromaHeight; row++) {
+            for (int col = 0; col < chromaWidth; col++) {
+                int vPos = row * vRowStride + col * vPixelStride;
+                int uPos = row * uRowStride + col * uPixelStride;
+
+                // Defensive check to avoid buffer out of bounds
+                if (vPos < vBuffer.capacity() && uPos < uBuffer.capacity()) {
+                    nv21[pos++] = vBuffer.get(vPos); // V goes first
+                    nv21[pos++] = uBuffer.get(uPos); // U goes second
+                }
+            }
+        }
 
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             YuvImage yuvImage = new YuvImage(nv21, ImageFormat.NV21, width, height, null);
