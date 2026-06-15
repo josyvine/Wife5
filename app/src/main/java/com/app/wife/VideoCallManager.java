@@ -82,7 +82,6 @@ public class VideoCallManager {
         isCallActive = true;
 
         executorService.execute(() -> {
-            WifeLogger.log(TAG, "Inbound video call thread launched. Initializing ServerSocket on Port: " + Constants.OFF_PORT_VIDEO);
             try {
                 serverSocket = new ServerSocket(Constants.OFF_PORT_VIDEO);
                 Log.d(TAG, "Listening for incoming Video Call on port " + Constants.OFF_PORT_VIDEO);
