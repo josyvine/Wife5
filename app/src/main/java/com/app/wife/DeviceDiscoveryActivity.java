@@ -18,6 +18,8 @@ public class DeviceDiscoveryActivity extends AppCompatActivity implements
         WiFiDirectManager.PeerChangeListener, 
         WiFiDirectManager.ConnectionChangeListener {
 
+    private static final String TAG = "DeviceDiscoveryActivity";
+
     private ActivityDeviceDiscoveryBinding binding;
     private WiFiDirectManager wifiDirectManager;
     private DeviceAdapter adapter;
@@ -29,17 +31,21 @@ public class DeviceDiscoveryActivity extends AppCompatActivity implements
         binding = ActivityDeviceDiscoveryBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        WifeLogger.log(TAG, "onCreate() invoked. Initializing DeviceDiscoveryActivity.");
+
         wifiDirectManager = WiFiDirectManager.getInstance(this);
 
         setupToolbar();
         setupRecyclerView();
 
         binding.btnStartDiscovery.setOnClickListener(v -> {
+            WifeLogger.log(TAG, "User triggered INITIATE MESH SCAN button. Starting peer discovery sweep.");
             binding.pbDiscoveryProgress.setVisibility(View.VISIBLE);
             wifiDirectManager.discoverPeers();
         });
 
         // Trigger an initial discovery sweep
+        WifeLogger.log(TAG, "Launching initial automated peer discovery sweep on activity creation.");
         wifiDirectManager.discoverPeers();
     }
 
@@ -48,21 +54,39 @@ public class DeviceDiscoveryActivity extends AppCompatActivity implements
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
-        binding.toolbarDiscovery.setNavigationOnClickListener(v -> onBackPressed());
+        binding.toolbarDiscovery.setNavigationOnClickListener(v -> {
+            WifeLogger.log(TAG, "Navigation back button clicked. Exiting DeviceDiscoveryActivity.");
+            onBackPressed();
+        });
     }
 
     private void setupRecyclerView() {
+        WifeLogger.log(TAG, "Initializing DeviceAdapter and binding LayoutManager to RecyclerView.");
         adapter = new DeviceAdapter(peerList, device -> {
+            String deviceDetails = "Name: " + device.deviceName + " | Mac: " + device.deviceAddress;
+            WifeLogger.log(TAG, "User selected target device for connection. " + deviceDetails);
             Toast.makeText(this, "Connecting to " + device.deviceName + "...", Toast.LENGTH_SHORT).show();
+            
             wifiDirectManager.connect(device, new WifiP2pManager.ActionListener() {
                 @Override
                 public void onSuccess() {
+                    WifeLogger.log(TAG, "P2P connection request successfully queued by the system framework.");
                     Toast.makeText(DeviceDiscoveryActivity.this, "Connection request posted successfully.", Toast.LENGTH_SHORT).show();
                 }
 
                 @Override
                 public void onFailure(int reason) {
-                    Toast.makeText(DeviceDiscoveryActivity.this, "Failed connecting. Reason: " + reason, Toast.LENGTH_SHORT).show();
+                    WifeLogger.log(TAG, "P2P connection request rejected by system framework. Reason Code: " + reason);
+                    
+                    // Defensive check: If reason is 0 (generic system error) but the group is already formed,
+                    // bypass the failure, notify the user, and return to the main dashboard.
+                    if (reason == 0 && wifiDirectManager.getConnectionInfo() != null && wifiDirectManager.getConnectionInfo().groupFormed) {
+                        WifeLogger.log(TAG, "Bypassing Reason: 0 because the P2P connection group is already active under-the-hood. Redirecting to home.");
+                        Toast.makeText(DeviceDiscoveryActivity.this, "P2P Network is already connected. Returning to home.", Toast.LENGTH_SHORT).show();
+                        finish();
+                    } else {
+                        Toast.makeText(DeviceDiscoveryActivity.this, "Failed connecting. Reason: " + reason, Toast.LENGTH_SHORT).show();
+                    }
                 }
             });
         });
@@ -73,6 +97,7 @@ public class DeviceDiscoveryActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
+        WifeLogger.log(TAG, "onResume() called. Registering as PeerChangeListener and ConnectionChangeListener.");
         wifiDirectManager.registerPeerChangeListener(this);
         wifiDirectManager.registerConnectionChangeListener(this);
         
@@ -83,12 +108,14 @@ public class DeviceDiscoveryActivity extends AppCompatActivity implements
     @Override
     protected void onPause() {
         super.onPause();
+        WifeLogger.log(TAG, "onPause() called. Unregistering as PeerChangeListener and ConnectionChangeListener.");
         wifiDirectManager.unregisterPeerChangeListener(this);
         wifiDirectManager.unregisterConnectionChangeListener(this);
     }
 
     @Override
     public void onPeersChanged(List<WifiP2pDevice> peers) {
+        WifeLogger.log(TAG, "onPeersChanged() callback triggered. Discovered peers count: " + peers.size());
         binding.pbDiscoveryProgress.setVisibility(View.GONE);
         peerList.clear();
         peerList.addAll(peers);
@@ -97,8 +124,11 @@ public class DeviceDiscoveryActivity extends AppCompatActivity implements
 
     @Override
     public void onConnectionChanged(android.net.wifi.p2p.WifiP2pInfo info) {
-        if (info != null && info.groupFormed) {
+        boolean groupFormed = info != null && info.groupFormed;
+        WifeLogger.log(TAG, "onConnectionChanged() callback triggered. Group Formed Status: " + groupFormed);
+        if (groupFormed) {
             Toast.makeText(this, "P2P Network Group Formed successfully!", Toast.LENGTH_SHORT).show();
+            WifeLogger.log(TAG, "Wi-Fi P2P Group formed successfully. Terminating DeviceDiscoveryActivity and returning to main dashboard.");
             finish(); // Go back to Home Dashboard once connected, where detailed status will show
         }
     }
