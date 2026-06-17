@@ -4,11 +4,13 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,6 +18,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -60,14 +63,64 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         MessageEntity msg = messages.get(position);
         String formattedTime = formatTime(msg.getTimestamp());
+        String rawText = msg.getText();
+
+        boolean isAttachment = rawText.startsWith("[FILE]:") || rawText.startsWith("[IMAGE]:") || 
+                               rawText.startsWith("[VIDEO]:") || rawText.startsWith("[AUDIO]:");
+
+        String filename = "Attachment";
+        String fileSize = "";
+        if (isAttachment) {
+            try {
+                int firstColon = rawText.indexOf(':');
+                String payload = rawText.substring(firstColon + 1);
+                String[] parts = payload.split("\\|");
+                if (parts.length > 0) filename = parts[0];
+                if (parts.length > 1) {
+                    long bytes = Long.parseLong(parts[1]);
+                    fileSize = " (" + Utils.formatFileSize(bytes) + ")";
+                }
+            } catch (Exception e) {
+                WifeLogger.log("ChatAdapter", "Error parsing attachment: " + e.getMessage());
+            }
+        }
 
         if (holder instanceof SentViewHolder) {
             SentViewHolder h = (SentViewHolder) holder;
-            h.tvText.setText(msg.getText());
+            if (isAttachment) {
+                if (rawText.startsWith("[FILE]:")) {
+                    h.tvText.setText("📁 Document: " + filename + fileSize);
+                } else if (rawText.startsWith("[IMAGE]:")) {
+                    h.tvText.setText("📷 Image: " + filename + fileSize);
+                } else if (rawText.startsWith("[VIDEO]:")) {
+                    h.tvText.setText("🎥 Video: " + filename + fileSize);
+                } else if (rawText.startsWith("[AUDIO]:")) {
+                    h.tvText.setText("🎤 Voice Note: " + filename + fileSize);
+                }
+            } else {
+                h.tvText.setText(rawText);
+            }
             h.tvTime.setText(formattedTime);
         } else if (holder instanceof ReceivedViewHolder) {
             ReceivedViewHolder h = (ReceivedViewHolder) holder;
-            h.tvText.setText(msg.getText());
+            if (isAttachment) {
+                final String finalFilename = filename;
+                h.ivSave.setVisibility(View.VISIBLE);
+                h.ivSave.setOnClickListener(v -> saveReceivedFileToPublic(v.getContext(), finalFilename));
+
+                if (rawText.startsWith("[FILE]:")) {
+                    h.tvText.setText("📁 Document: " + filename + fileSize);
+                } else if (rawText.startsWith("[IMAGE]:")) {
+                    h.tvText.setText("📷 Image: " + filename + fileSize);
+                } else if (rawText.startsWith("[VIDEO]:")) {
+                    h.tvText.setText("🎥 Video: " + filename + fileSize);
+                } else if (rawText.startsWith("[AUDIO]:")) {
+                    h.tvText.setText("🎤 Voice Note: " + filename + fileSize);
+                }
+            } else {
+                h.ivSave.setVisibility(View.GONE);
+                h.tvText.setText(rawText);
+            }
             h.tvTime.setText(formattedTime);
         }
 
@@ -77,6 +130,67 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             showContextMenu(v, msg, position);
             return true;
         });
+    }
+
+    private void saveReceivedFileToPublic(Context context, String filename) {
+        WifeLogger.log("ChatAdapter", "User triggered save action for file: " + filename);
+        
+        String ext = "";
+        int idx = filename.lastIndexOf('.');
+        if (idx > 0) {
+            ext = filename.substring(idx + 1).toLowerCase(Locale.US);
+        }
+
+        String subFolder;
+        switch (ext) {
+            case "mp3":
+            case "emv":
+            case "wav":
+            case "ogg":
+            case "m4a":
+            case "aac":
+                subFolder = "music";
+                break;
+            case "jpg":
+            case "jpeg":
+            case "png":
+            case "gif":
+            case "bmp":
+            case "webp":
+                subFolder = "images";
+                break;
+            case "mp4":
+            case "mkv":
+            case "avi":
+            case "mov":
+            case "3gp":
+            case "webm":
+                subFolder = "videos";
+                break;
+            case "pdf":
+            case "txt":
+            case "doc":
+            case "docx":
+            case "xls":
+            case "xlsx":
+            case "ppt":
+            case "pptx":
+                subFolder = "document";
+                break;
+            default:
+                subFolder = "misc";
+                break;
+        }
+
+        File targetFile = new File(new File(new File(Environment.getExternalStorageDirectory(), "wife shared"), subFolder), filename);
+        
+        if (targetFile.exists()) {
+            WifeLogger.log("ChatAdapter", "Verified file existence inside public folder: " + targetFile.getAbsolutePath());
+            Toast.makeText(context, "Saved to: wife shared/" + subFolder + "/" + filename, Toast.LENGTH_LONG).show();
+        } else {
+            WifeLogger.log("ChatAdapter", "File not found at targeted public path. It may still be transferring.");
+            Toast.makeText(context, "File is still downloading or transfer failed.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void showContextMenu(View anchorView, final MessageEntity msg, final int position) {
@@ -96,7 +210,21 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             String title = item.getTitle().toString();
             if ("Copy".equals(title)) {
                 WifeLogger.log("ChatAdapter", "User clicked: 'Copy'");
-                copyToClipboard(context, msg.getText());
+                String copyText = msg.getText();
+                if (copyText.startsWith("[FILE]:") || copyText.startsWith("[IMAGE]:") || 
+                    copyText.startsWith("[VIDEO]:") || copyText.startsWith("[AUDIO]:")) {
+                    try {
+                        int firstColon = copyText.indexOf(':');
+                        String payload = copyText.substring(firstColon + 1);
+                        String[] parts = payload.split("\\|");
+                        if (parts.length > 0) {
+                            copyText = parts[0]; // Copy only the filename
+                        }
+                    } catch (Exception e) {
+                        WifeLogger.log("ChatAdapter", "Error cleaning clipboard text: " + e.getMessage());
+                    }
+                }
+                copyToClipboard(context, copyText);
             } else if ("Delete locally".equals(title)) {
                 WifeLogger.log("ChatAdapter", "User clicked: 'Delete locally'");
                 deleteLocally(context, msg, position);
@@ -190,11 +318,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public static class ReceivedViewHolder extends RecyclerView.ViewHolder {
         TextView tvText;
         TextView tvTime;
+        ImageView ivSave; // Tiny save icon for received files
 
         public ReceivedViewHolder(@NonNull View itemView) {
             super(itemView);
             tvText = itemView.findViewById(R.id.tvMessageText);
             tvTime = itemView.findViewById(R.id.tvMessageTime);
+            ivSave = itemView.findViewById(R.id.ivSaveAttachment);
         }
     }
 }
