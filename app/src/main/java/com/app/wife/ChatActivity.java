@@ -1,20 +1,30 @@
 package com.wife.app;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.wife.app.databinding.ActivityChatBinding;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class ChatActivity extends AppCompatActivity implements ChatManager.MessageListener {
+
+    private static final String TAG = "ChatActivity";
 
     private ActivityChatBinding binding;
     private ChatAdapter adapter;
@@ -28,25 +38,16 @@ public class ChatActivity extends AppCompatActivity implements ChatManager.Messa
         binding = ActivityChatBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        WifeLogger.log("ChatActivity", "onCreate() invoked. Constructing Chat Session UI components.");
+        WifeLogger.log(TAG, "onCreate() invoked. Constructing Chat Session UI components.");
 
         db = RoomDatabaseManager.getInstance(this);
         selfId = Utils.getDeviceId(this);
-        WifeLogger.log("ChatActivity", "Local Hardware Signature ID resolved: " + selfId);
+        WifeLogger.log(TAG, "Local Hardware Signature ID resolved: " + selfId);
 
         setupToolbar();
         setupRecyclerView();
-
-        binding.btnSendChatMessage.setOnClickListener(v -> {
-            String text = binding.etChatMessage.getText().toString().trim();
-            if (!TextUtils.isEmpty(text)) {
-                WifeLogger.log("ChatActivity", "User triggered SEND button. Outgoing text length: " + text.length());
-                MessageSender.getInstance(this).sendMessage(text);
-                binding.etChatMessage.setText("");
-            } else {
-                WifeLogger.log("ChatActivity", "User tapped SEND button, but text input field was empty.");
-            }
-        });
+        setupInputBarListeners();
+        setupEmojiPanel();
 
         loadHistory();
     }
@@ -57,13 +58,13 @@ public class ChatActivity extends AppCompatActivity implements ChatManager.Messa
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
         binding.toolbarChat.setNavigationOnClickListener(v -> {
-            WifeLogger.log("ChatActivity", "Navigation back button clicked. Exiting Chat Session.");
+            WifeLogger.log(TAG, "Navigation back button clicked. Exiting Chat Session.");
             onBackPressed();
         });
     }
 
     private void setupRecyclerView() {
-        WifeLogger.log("ChatActivity", "Initializing ChatAdapter and binding LayoutManager to RecyclerView.");
+        WifeLogger.log(TAG, "Initializing ChatAdapter and binding LayoutManager to RecyclerView.");
         adapter = new ChatAdapter(this, messagesList);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setStackFromEnd(true); // Always align chats from the bottom up like modern chats
@@ -71,8 +72,140 @@ public class ChatActivity extends AppCompatActivity implements ChatManager.Messa
         binding.rvChatHistory.setAdapter(adapter);
     }
 
+    private void setupInputBarListeners() {
+        WifeLogger.log(TAG, "Registering TextWatcher and click listeners for the WhatsApp-style input bar.");
+
+        // Monitor typing states dynamically
+        binding.etChatMessage.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String text = s.toString().trim();
+                if (text.isEmpty()) {
+                    // Default state: Camera icon visible, Microphone icon active
+                    binding.btnCameraIcon.setVisibility(View.VISIBLE);
+                    binding.ivSendVoiceIcon.setImageResource(R.drawable.mic_24px);
+                } else {
+                    // Typing state: Camera icon hidden (attachment slides right), Send icon active
+                    binding.btnCameraIcon.setVisibility(View.GONE);
+                    binding.ivSendVoiceIcon.setImageResource(R.drawable.send_24px);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
+        // Hide emoji panel if the user taps the text input area to type
+        binding.etChatMessage.setOnClickListener(v -> {
+            if (binding.layoutEmojiPanel.getVisibility() == View.VISIBLE) {
+                WifeLogger.log(TAG, "Hiding emoji panel to make room for system soft keyboard.");
+                binding.layoutEmojiPanel.setVisibility(View.GONE);
+            }
+        });
+
+        // Click handler for the morphing mic / send button
+        binding.cardSendVoiceContainer.setOnClickListener(v -> {
+            String text = binding.etChatMessage.getText().toString().trim();
+            if (!TextUtils.isEmpty(text)) {
+                WifeLogger.log(TAG, "User triggered SEND message action. Outgoing text length: " + text.length());
+                MessageSender.getInstance(this).sendMessage(text);
+                binding.etChatMessage.setText("");
+            } else {
+                WifeLogger.log(TAG, "User triggered offline voice recording action.");
+                Toast.makeText(this, "Voice recording interface coming soon.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // Standard attachment button click log
+        binding.btnAttachFile.setOnClickListener(v -> {
+            WifeLogger.log(TAG, "User tapped attachment paperclip button. Launching transfer pipeline.");
+            Toast.makeText(this, "Select 'Transfer Files' from the home menu to share files.", Toast.LENGTH_LONG).show();
+        });
+
+        // Standard camera button click log
+        binding.btnCameraIcon.setOnClickListener(v -> {
+            WifeLogger.log(TAG, "User tapped camera button. Launching video calling wizard.");
+            Toast.makeText(this, "Select 'Video Session' from the home menu to start a camera stream.", Toast.LENGTH_LONG).show();
+        });
+    }
+
+    private void setupEmojiPanel() {
+        WifeLogger.log(TAG, "Initializing local offline emoji selection panel.");
+
+        // Toggle emoji panel visibility when clicking the sticker button
+        binding.btnEmojiSticker.setOnClickListener(v -> {
+            if (binding.layoutEmojiPanel.getVisibility() == View.VISIBLE) {
+                binding.layoutEmojiPanel.setVisibility(View.GONE);
+                WifeLogger.log(TAG, "Dismissing bottom emoji panel.");
+            } else {
+                hideKeyboard();
+                binding.layoutEmojiPanel.setVisibility(View.VISIBLE);
+                WifeLogger.log(TAG, "Displaying bottom emoji panel.");
+            }
+        });
+
+        // Asynchronously load the local raw JSON emoji database
+        new Thread(() -> {
+            try {
+                Map<String, List<EmojiLoader.EmojiDTO>> emojiMap = EmojiLoader.loadEmojisFromAssets(this);
+                if (emojiMap != null && !emojiMap.isEmpty()) {
+                    runOnUiThread(() -> {
+                        WifeLogger.log(TAG, "Local emoji database parsed successfully. Binding categories.");
+                        setupEmojiViews(emojiMap);
+                    });
+                }
+            } catch (Exception e) {
+                WifeLogger.log(TAG, "Failed to load local offline emoji database: " + e.getMessage(), e);
+            }
+        }).start();
+    }
+
+    private void setupEmojiViews(Map<String, List<EmojiLoader.EmojiDTO>> emojiMap) {
+        List<String> categories = new ArrayList<>(emojiMap.keySet());
+        
+        // Setup horizontal categories picker
+        EmojiCategoryAdapter categoryAdapter = new EmojiAdapter.CategoryAdapter(categories, category -> {
+            List<EmojiLoader.EmojiDTO> emojis = emojiMap.get(category);
+            if (emojis != null) {
+                setupEmojiGrid(emojis);
+            }
+        });
+        binding.rvEmojiCategories.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        binding.rvEmojiCategories.setAdapter(categoryAdapter);
+
+        // Load first category by default on boot
+        if (!categories.isEmpty()) {
+            List<EmojiLoader.EmojiDTO> defaultEmojis = emojiMap.get(categories.get(0));
+            if (defaultEmojis != null) {
+                setupEmojiGrid(defaultEmojis);
+            }
+        }
+    }
+
+    private void setupEmojiGrid(List<EmojiLoader.EmojiDTO> emojis) {
+        EmojiGridAdapter gridAdapter = new EmojiAdapter.GridAdapter(emojis, emojiChar -> {
+            // Insert clicked emoji character directly inside our text field cursor position
+            int start = Math.max(binding.etChatMessage.getSelectionStart(), 0);
+            int end = Math.max(binding.etChatMessage.getSelectionEnd(), 0);
+            binding.etChatMessage.getText().replace(Math.min(start, end), Math.max(start, end),
+                    emojiChar, 0, emojiChar.length());
+        });
+        binding.rvEmojiGrid.setLayoutManager(new GridLayoutManager(this, 7)); // Clean 7 column grid
+        binding.rvEmojiGrid.setAdapter(gridAdapter);
+    }
+
+    private void hideKeyboard() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null && getCurrentFocus() != null) {
+            imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+        }
+    }
+
     private void loadHistory() {
-        WifeLogger.log("ChatActivity", "Accessing local SQLite database to load chat logs...");
+        WifeLogger.log(TAG, "Accessing local SQLite database to load chat logs...");
         try {
             // Query database on separate or main thread allowed
             List<MessageEntity> history = db.messageDao().getAllMessages();
@@ -134,6 +267,30 @@ public class ChatActivity extends AppCompatActivity implements ChatManager.Messa
                 WifeLogger.log("ChatActivity", "Real-time list update redrawn. Current list size: " + messagesList.size());
             } catch (Exception e) {
                 WifeLogger.log("ChatActivity", "Error rendering real-time message bubble update: " + e.getMessage(), e);
+            }
+        });
+    }
+
+    @Override
+    public void onMessageUnsent(long targetTimestamp) {
+        WifeLogger.log(TAG, "onMessageUnsent callback triggered. Target timestamp: " + targetTimestamp);
+        runOnUiThread(() -> {
+            try {
+                boolean removed = false;
+                for (int i = 0; i < messagesList.size(); i++) {
+                    if (messagesList.get(i).getTimestamp() == targetTimestamp) {
+                        messagesList.remove(i);
+                        removed = true;
+                        WifeLogger.log(TAG, "Successfully removed unsent message from active list dataset in real-time.");
+                        break;
+                    }
+                }
+                if (removed) {
+                    adapter.notifyDataSetChanged();
+                    scrollToBottom();
+                }
+            } catch (Exception e) {
+                WifeLogger.log(TAG, "Error executing real-time unsend UI refresh: " + e.getMessage(), e);
             }
         });
     }
