@@ -1,6 +1,7 @@
 package com.wife.app;
 
 import android.content.Context;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
@@ -92,7 +93,14 @@ public class FileReceiver implements Runnable {
     }
 
     private File getTargetDirectory(String filename) {
-        File rootDir = new File(Environment.getExternalStorageDirectory(), "wife shared");
+        File rootDir;
+        // On Android 11 (API 30) and above, use public Download/ directory to bypass Scoped Storage write blocks
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            rootDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "wife shared");
+        } else {
+            rootDir = new File(Environment.getExternalStorageDirectory(), "wife shared");
+        }
+
         String ext = "";
         int idx = filename.lastIndexOf('.');
         if (idx > 0) {
