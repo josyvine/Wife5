@@ -15,6 +15,7 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
+import java.io.File;
 import java.util.ArrayList;
 
 public class FileTransferForegroundService extends Service {
@@ -178,5 +179,35 @@ public class FileTransferForegroundService extends Service {
                 WifeLogger.log(TAG, "Wife File Sharing Service Notification Channel created.");
             }
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        WifeLogger.log(TAG, "onDestroy() invoked. Tearing down file transfer service and cleaning resources.");
+        
+        // 1. Trigger cancellation flag to break background loop execution
+        isCancelled = true;
+        isPaused = false;
+
+        // 2. Unblock any threads currently suspended on the pauseLock monitor
+        synchronized (pauseLock) {
+            pauseLock.notifyAll();
+        }
+
+        // 3. Force-purge any temporary cache files from previous or aborted transfers
+        File cacheDir = getCacheDir();
+        if (cacheDir != null && cacheDir.exists()) {
+            File[] files = cacheDir.listFiles();
+            if (files != null) {
+                for (File f : files) {
+                    if (f.getName().startsWith("temp_send_") || f.getName().startsWith("temp_recv_")) {
+                        boolean deleted = f.delete();
+                        WifeLogger.log(TAG, "Purged temporary cache file during destroy: " + f.getName() + " -> " + deleted);
+                    }
+                }
+            }
+        }
+
+        super.onDestroy();
     }
 }
