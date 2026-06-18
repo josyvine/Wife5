@@ -103,6 +103,10 @@ public class ConnectionManager implements WiFiDirectManager.ConnectionChangeList
         }
         socketServer = new SocketServer(context, this);
         socketServer.start();
+
+        // Start the persistent NIO file receiver on port 8900
+        WifeLogger.log(TAG, "startServers() invoking persistent high-speed FileReceiver.startServer.");
+        FileReceiver.startServer(context);
     }
 
     private synchronized void startClient(InetAddress hostAddress) {
@@ -129,6 +133,12 @@ public class ConnectionManager implements WiFiDirectManager.ConnectionChangeList
         isConnected = false;
         peerIpAddress = "";
         isHost = false;
+
+        // Stop any running file transfer activities/servers cleanly
+        FileTransferForegroundService.isCancelled = true;
+        synchronized (FileTransferForegroundService.pauseLock) {
+            FileTransferForegroundService.pauseLock.notifyAll();
+        }
         
         if (socketServer != null) {
             socketServer.stop();
