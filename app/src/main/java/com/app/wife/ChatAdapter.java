@@ -86,6 +86,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         String filename = "Attachment";
         String fileSize = "";
+        String payloadUri = null;
         if (isAttachment) {
             try {
                 int firstColon = rawText.indexOf(':');
@@ -96,13 +97,35 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     long bytes = Long.parseLong(parts[1]);
                     fileSize = " (" + Utils.formatFileSize(bytes) + ")";
                 }
+                if (parts.length > 2) {
+                    payloadUri = parts[2];
+                }
             } catch (Exception e) {
                 WifeLogger.log("ChatAdapter", "Error parsing attachment: " + e.getMessage());
             }
         }
 
         final String cleanFilename = getCleanFileName(filename);
-        final File localFile = getLocalFile(filename);
+        
+        // Dynamically resolve target file. Check private cache path (payloadUri) first, then fallback to public Downloads
+        File resolvedFile = null;
+        if (payloadUri != null && !payloadUri.isEmpty()) {
+            try {
+                Uri parsedUri = Uri.parse(payloadUri);
+                if (parsedUri.getScheme() == null || "file".equalsIgnoreCase(parsedUri.getScheme())) {
+                    File cacheFile = new File(parsedUri.getPath());
+                    if (cacheFile.exists()) {
+                        resolvedFile = cacheFile;
+                    }
+                }
+            } catch (Exception e) {
+                WifeLogger.log("ChatAdapter", "Error checking local cache path: " + e.getMessage());
+            }
+        }
+        if (resolvedFile == null) {
+            resolvedFile = getLocalFile(filename);
+        }
+        final File localFile = resolvedFile;
         
         // Define a combined, effectively final string to resolve lambda compiler scoping restrictions
         final String labelWithFileSize = cleanFilename + fileSize;
