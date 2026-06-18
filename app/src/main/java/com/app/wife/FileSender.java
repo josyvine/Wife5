@@ -95,6 +95,10 @@ public class FileSender {
         WifeLogger.log(TAG, "sendQueue() started. Files count: " + uris.size() + " | Destination Peer: " + peerIp);
 
         executorService.execute(() -> {
+            // Symmetrical State Reset: Ensure a clean transactional starting point
+            FileTransferForegroundService.isCancelled = false;
+            FileTransferForegroundService.isPaused = false;
+
             SocketChannel socketChannel = null;
             OutputStream socketOs = null;
 
@@ -144,6 +148,7 @@ public class FileSender {
                         }
 
                         // Write raw JSON block
+                        // Symmetrical Fix: Directly write metaBuf to advance progress metrics correctly
                         ByteBuffer metaBuf = ByteBuffer.wrap(metaBytes);
                         while (metaBuf.hasRemaining()) {
                             socketChannel.write(metaBuf);
