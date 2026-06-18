@@ -139,22 +139,19 @@ public class FileSender {
 
                         byte[] metaBytes = fileMeta.toString().getBytes(StandardCharsets.UTF_8);
 
-                        // Write 4-byte length header prefix
-                        ByteBuffer lenBuf = ByteBuffer.allocate(4);
-                        lenBuf.putInt(metaBytes.length);
-                        lenBuf.flip();
-                        while (lenBuf.hasRemaining()) {
-                            socketChannel.write(lenBuf);
-                        }
+                        // Symmetrical Fix: Write metadata details directly to socketOs
+                        // This prevents internal SocketChannel read/write desynchronization with LZ4 wrapping
+                        byte[] lenBytes = new byte[4];
+                        lenBytes[0] = (byte) ((metaBytes.length >> 24) & 0xFF);
+                        lenBytes[1] = (byte) ((metaBytes.length >> 16) & 0xFF);
+                        lenBytes[2] = (byte) ((metaBytes.length >> 8) & 0xFF);
+                        lenBytes[3] = (byte) (metaBytes.length & 0xFF);
 
-                        // Write raw JSON block
-                        // Symmetrical Fix: Directly write metaBuf to advance progress metrics correctly
-                        ByteBuffer metaBuf = ByteBuffer.wrap(metaBytes);
-                        while (metaBuf.hasRemaining()) {
-                            socketChannel.write(metaBuf);
-                        }
+                        socketOs.write(lenBytes);
+                        socketOs.write(metaBytes);
+                        socketOs.flush();
 
-                        Log.d(TAG, "JSON Handshake payload sent: " + fileMeta.toString());
+                        Log.d(TAG, "JSON Handshake payload sent directly to stream: " + fileMeta.toString());
 
                         // 4. Wrap Socket Channel output stream into the fast LZ4 compressor stream
                         // Note: We wrap the stream using our custom NonClosingOutputStream so that
@@ -232,13 +229,10 @@ public class FileSender {
                     }
                 }
 
-                // 3. Write transmission finished goodbye signal (Metadata length = 0)
+                // 3. Write transmission finished goodbye signal (Metadata length = 0) directly to stream
                 if (!FileTransferForegroundService.isCancelled) {
-                    ByteBuffer goodbyeBuf = ByteBuffer.allocate(4).putInt(0);
-                    goodbyeBuf.flip();
-                    while (goodbyeBuf.hasRemaining()) {
-                        socketChannel.write(goodbyeBuf);
-                    }
+                    byte[] goodbyeBytes = new byte[4];
+                    socketOs.write(goodbyeBytes);
                     socketOs.flush();
                     WifeLogger.log(TAG, "All queue files sent successfully. Sent persistent stream finished marker.");
                     broadcastCompletion();
