@@ -90,6 +90,13 @@ public class FileTransferForegroundService extends Service {
                     }
                     break;
 
+                case "UPDATE_NOTIF":
+                    // Symmetrical update block mapping to FileSender and FileReceiver stream notifications
+                    String notifText = intent.getStringExtra("NOTIF_TEXT");
+                    int progressValue = intent.getIntExtra("PROGRESS", 0);
+                    updateNotification(notifText, progressValue, false);
+                    break;
+
                 case Constants.ACTION_PAUSE_TRANSFER:
                     WifeLogger.log(TAG, "ACTION_PAUSE_TRANSFER received. Suspending file stream threads.");
                     isPaused = true;
