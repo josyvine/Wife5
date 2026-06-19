@@ -192,8 +192,14 @@ public class FileTransferForegroundService extends Service {
     public void onDestroy() {
         WifeLogger.log(TAG, "onDestroy() invoked. Tearing down file transfer service and cleaning resources.");
         
-        // Symmetrical cleanup: Force-remove the foreground status and dismiss notification bar from tray
+        // Symmetrical cleanup: Force-remove the foreground status
         stopForeground(true);
+
+        // Symmetrical dismissal: Explicitly dismiss standard ongoing notifications from status bar tray
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager != null) {
+            manager.cancel(NOTIF_ID);
+        }
 
         // 1. Trigger cancellation flag to break background loop execution
         isCancelled = true;
