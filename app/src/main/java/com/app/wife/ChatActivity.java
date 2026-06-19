@@ -47,6 +47,9 @@ public class ChatActivity extends AppCompatActivity implements ChatManager.Messa
     private RoomDatabaseManager db;
     private String selfId;
 
+    // Symmetrical cache variable to resolve Glitch 2: Holds the active peer hardware signature ID
+    private String peerDeviceId;
+
     // Multimedia Pickers & Capture launch handlers
     private Uri tempCameraUri;
 
@@ -104,6 +107,13 @@ public class ChatActivity extends AppCompatActivity implements ChatManager.Messa
         db = RoomDatabaseManager.getInstance(this);
         selfId = Utils.getDeviceId(this);
         WifeLogger.log(TAG, "Local Hardware Signature ID resolved: " + selfId);
+
+        // Retrieve the passed peer hardware device ID extra to resolve Glitch 2
+        peerDeviceId = getIntent().getStringExtra(Constants.EXTRA_PEER_MAC);
+        if (peerDeviceId == null || peerDeviceId.isEmpty()) {
+            peerDeviceId = "peer_device";
+        }
+        WifeLogger.log(TAG, "Chat Session peer Device ID resolved: " + peerDeviceId);
 
         setupToolbar();
         setupRecyclerView();
@@ -512,17 +522,17 @@ public class ChatActivity extends AppCompatActivity implements ChatManager.Messa
         }
 
         private void loadHistory() {
-            WifeLogger.log(TAG, "Accessing local SQLite database to load chat logs...");
+            WifeLogger.log(TAG, "Accessing local SQLite database to load chat logs for peer: " + peerDeviceId);
             try {
-                // Query database on separate or main thread allowed
-                List<MessageEntity> history = db.messageDao().getAllMessages();
+                // Symmetrical segmented lookup: Query database specifically for the active peer relationship
+                List<MessageEntity> history = db.messageDao().getChatHistory(peerDeviceId, selfId);
                 messagesList.clear();
                 
                 WifeLogger.log("ChatActivity", "Successfully retrieved " + history.size() + " messages from Room database.");
                 
-                // Reverse because we queried DESC from database for chronological ordering in list
-                for (int i = history.size() - 1; i >= 0; i--) {
-                    messagesList.add(history.get(i));
+                // Populating in chronological order (Room DAO returns chronological getChatHistory by default)
+                for (MessageEntity msg : history) {
+                    messagesList.add(msg);
                 }
                 
                 adapter.notifyDataSetChanged();
@@ -568,16 +578,25 @@ public class ChatActivity extends AppCompatActivity implements ChatManager.Messa
         @Override
         public void onMessageReceived(MessageEntity message) {
             WifeLogger.log("ChatActivity", "onMessageReceived callback triggered on ChatActivity. From: " + message.getSender() + " | Text: " + message.getText());
-            runOnUiThread(() -> {
-                try {
-                    messagesList.add(message);
-                    adapter.notifyDataSetChanged();
-                    scrollToBottom();
-                    WifeLogger.log("ChatActivity", "Real-time list update redrawn. Current list size: " + messagesList.size());
-                } catch (Exception e) {
-                    WifeLogger.log("ChatActivity", "Error rendering real-time message bubble update: " + e.getMessage(), e);
-                }
-            });
+            
+            // Verify if the incoming message corresponds strictly to the active peer session (resolve Glitch 2)
+            boolean isFromActivePeer = message.getSender().equals(peerDeviceId);
+            boolean isFromSelf = message.getSender().equals(selfId) && message.getReceiver().equals(peerDeviceId);
+
+            if (isFromActivePeer || isFromSelf) {
+                runOnUiThread(() -> {
+                    try {
+                        messagesList.add(message);
+                        adapter.notifyDataSetChanged();
+                        scrollToBottom();
+                        WifeLogger.log("ChatActivity", "Real-time list update redrawn. Current list size: " + messagesList.size());
+                    } catch (Exception e) {
+                        WifeLogger.log("ChatActivity", "Error rendering real-time message bubble update: " + e.getMessage(), e);
+                    }
+                });
+            } else {
+                WifeLogger.log("ChatActivity", "Suppressed real-time message bubble insertion. Message belongs to a different background session.");
+            }
         }
 
         @Override
