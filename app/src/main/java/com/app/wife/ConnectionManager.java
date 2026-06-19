@@ -25,6 +25,9 @@ public class ConnectionManager implements WiFiDirectManager.ConnectionChangeList
     private boolean isHost = false;
     private boolean isConnected = false;
 
+    // Symmetrical cache variable to hold the active peer's unique hardware ID
+    private String peerDeviceId = "";
+
     public interface ConnectionStatusListener {
         void onConnectionStateChanged(boolean connected, String peerIp, boolean isHost);
     }
@@ -66,6 +69,17 @@ public class ConnectionManager implements WiFiDirectManager.ConnectionChangeList
 
     public boolean isConnected() {
         return isConnected;
+    }
+
+    // Thread-safe getter to expose the connected peer's unique hardware ID
+    public synchronized String getPeerDeviceId() {
+        return peerDeviceId;
+    }
+
+    // Thread-safe setter to update the active peer's unique hardware ID on handshake/messages
+    public synchronized void setPeerDeviceId(String peerDeviceId) {
+        WifeLogger.log(TAG, "setPeerDeviceId called. Tracking peer ID: " + peerDeviceId);
+        this.peerDeviceId = peerDeviceId;
     }
 
     @Override
@@ -132,6 +146,7 @@ public class ConnectionManager implements WiFiDirectManager.ConnectionChangeList
         WifeLogger.log(TAG, "teardown() invoked. Cleared connection state variables.");
         isConnected = false;
         peerIpAddress = "";
+        peerDeviceId = ""; // Clear active peer device ID on connection loss
         isHost = false;
 
         // Stop any running file transfer activities/servers cleanly
