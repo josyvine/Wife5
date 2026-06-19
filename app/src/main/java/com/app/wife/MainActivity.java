@@ -60,7 +60,10 @@ public class MainActivity extends AppCompatActivity implements ConnectionManager
         binding.btnTextChat.setOnClickListener(v -> {
             if (connectionManager.isConnected()) {
                 WifeLogger.log(TAG, "User launched ChatActivity.");
-                startActivity(new Intent(MainActivity.this, ChatActivity.class));
+                Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+                // Symmetrical payload forwarding to resolve Glitch 2: Pass current peer device ID
+                intent.putExtra(Constants.EXTRA_PEER_MAC, connectionManager.getPeerDeviceId());
+                startActivity(intent);
             } else {
                 Toast.makeText(this, "Please establish a peer mesh connection first.", Toast.LENGTH_SHORT).show();
             }
