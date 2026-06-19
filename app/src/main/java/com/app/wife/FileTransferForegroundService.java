@@ -92,6 +92,13 @@ public class FileTransferForegroundService extends Service {
                     break;
 
                 case "UPDATE_NOTIF":
+                    // Symmetrical safeguard: If the transfer session has already finished or been 
+                    // cancelled, immediately stop the service and ignore delayed progress notifications.
+                    if (isCancelled) {
+                        WifeLogger.log(TAG, "UPDATE_NOTIF ignored: Transfer session is inactive. Stopping service.");
+                        stopSelf();
+                        break;
+                    }
                     // Symmetrical update block mapping to FileSender and FileReceiver stream notifications
                     String notifText = intent.getStringExtra("NOTIF_TEXT");
                     int progressValue = intent.getIntExtra("PROGRESS", 0);
@@ -185,6 +192,9 @@ public class FileTransferForegroundService extends Service {
     public void onDestroy() {
         WifeLogger.log(TAG, "onDestroy() invoked. Tearing down file transfer service and cleaning resources.");
         
+        // Symmetrical cleanup: Force-remove the foreground status and dismiss notification bar from tray
+        stopForeground(true);
+
         // 1. Trigger cancellation flag to break background loop execution
         isCancelled = true;
         isPaused = false;
