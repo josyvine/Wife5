@@ -38,6 +38,15 @@ public class MainActivity extends AppCompatActivity implements ConnectionManager
         WifeLogger.log(TAG, "Starting ConnectionForegroundService to manage global P2P events and sockets.");
         Intent serviceIntent = new Intent(this, ConnectionForegroundService.class);
         startService(serviceIntent);
+
+        // Automatically restore all conversations asynchronously from public shared storage on startup (to survive clear data/reinstalls)
+        new Thread(() -> {
+            try {
+                BackupManager.restoreAllChats(MainActivity.this);
+            } catch (Exception e) {
+                WifeLogger.log(TAG, "Failed automated startup chat restoration: " + e.getMessage());
+            }
+        }).start();
     }
 
     private void setupMenuClickListeners() {
