@@ -119,7 +119,13 @@ public class MessageReceiver implements Runnable {
                 RoomDatabaseManager.getInstance(context).messageDao().deleteByTimestamp(targetTimestamp);
                 WifeLogger.log(TAG, "Unsent message successfully purged from local database.");
 
-                // 2. Notify the active Chat screen UI to remove the message bubble instantly
+                // 2. Symmetrical JSON backup overwrite to ensure unsent message is removed from storage
+                String peerDeviceId = json.has("sender") ? json.get("sender").getAsString() : "peer_device";
+                String selfId = Utils.getDeviceId(context);
+                BackupManager.backupChat(context, peerDeviceId, selfId);
+                WifeLogger.log(TAG, "Symmetrical JSON backup overwritten successfully to remove unsent message.");
+
+                // 3. Notify the active Chat screen UI to remove the message bubble instantly
                 ChatManager.getInstance(context).notifyMessageUnsent(targetTimestamp);
                 WifeLogger.log(TAG, "Dispatched unsend notification to active ChatManager observers.");
             } catch (Exception e) {
